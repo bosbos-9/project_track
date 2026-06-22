@@ -58,6 +58,7 @@ export function OpportunitiesTable({ opportunities, onSelect }: OpportunitiesTab
             <tr>
               <th className="px-5 py-3">الفرصة</th>
               <th className="px-5 py-3">الجهة</th>
+              <th className="px-5 py-3">النشاط الرئيسي</th>
               <th className="px-5 py-3">مجال الخدمة</th>
               <th className="px-5 py-3">القرار</th>
               <th className="px-5 py-3 text-left">الرابط</th>
@@ -80,6 +81,9 @@ export function OpportunitiesTable({ opportunities, onSelect }: OpportunitiesTab
                 </td>
                 <td className="max-w-[240px] px-5 py-4 align-top text-slate-700 dark:text-slate-300" dir="auto">
                   {opportunity.government_entity || "-"}
+                </td>
+                <td className="max-w-[240px] px-5 py-4 align-top text-slate-700 dark:text-slate-300" dir="auto">
+                  {opportunity.main_activity || "-"}
                 </td>
                 <td className="px-5 py-4 align-top text-slate-700 dark:text-slate-300" dir="auto">
                   {opportunity.best_service_area || "-"}
