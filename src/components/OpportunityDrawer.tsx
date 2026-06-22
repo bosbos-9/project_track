@@ -62,10 +62,7 @@ export function OpportunityDrawer({ opportunity, onClose }: OpportunityDrawerPro
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Detail label="الجهة الحكومية" value={opportunity.government_entity} autoDir />
             <Detail label="النشاط الرئيسي" value={opportunity.main_activity} autoDir />
-            <Detail label="درجة الملاءمة" value={opportunity.fit_score?.toString() ?? "-"} />
-            <Detail label="الثقة" value={opportunity.confidence?.toString() ?? "-"} />
             <Detail label="مجال الخدمة" value={opportunity.best_service_area} autoDir />
-            <Detail label="تاريخ الفتح" value={formatDateTime(opportunity.opening_date)} />
           </div>
 
           <div className="mt-4 space-y-3">
@@ -87,7 +84,6 @@ export function OpportunityDrawer({ opportunity, onClose }: OpportunityDrawerPro
               </p>
             </div>
 
-            <Detail label="آخر ظهور" value={formatDateTime(opportunity.last_seen_at)} />
           </div>
         </div>
 
