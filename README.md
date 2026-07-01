@@ -1,35 +1,60 @@
 # Etimad Tender AI Dashboard
 
-A React + Vite dashboard for reviewing Etimad tender opportunities assessed by an AI filtering workflow.
+A React + Vite dashboard for reviewing government opportunities assessed by the AI automation pipeline.
 
-The app connects directly to Supabase, reads opportunities from `matched_opportunities`, and gives a clean Arabic RTL interface for quickly reviewing matched, review, and rejected tender decisions.
+The dashboard connects directly to Supabase and provides an Arabic RTL interface for reviewing opportunities scraped from Etimad and Forsah.
 
 ## Features
 
-- Arabic RTL dashboard interface
+- Arabic RTL interface
 - Supabase client-side data fetching
-- KPI cards for total, matched, review, and rejected opportunities
-- Search by title, reference number, or government entity
-- Decision filter: all useful opportunities, matched, review, rejected
-- Service area filter
-- Sort by fit score, last seen, or opening date
-- Opportunity detail drawer
-- Etimad details link
-- CSV export for the currently filtered rows
-- Dark mode toggle
-- Loading, empty, setup, and error states
-- Filter persistence with `localStorage`
+- KPI cards
+- Search
+- Decision filters
+- Service area filters
+- Sorting
+- Opportunity details drawer
+- Direct source links
+- CSV export
+- Dark mode
+- Loading, setup, empty, and error states
+- Filter persistence using localStorage
 
-## Tech Stack
+---
+
+# Tech Stack
 
 - React
 - Vite
 - TypeScript
 - Tailwind CSS
-- Supabase JS client
-- Lucide React icons
+- Supabase JS
+- Lucide React
 
-## Getting Started
+---
+
+# Prerequisites
+
+Before running the dashboard, the backend infrastructure must already be configured.
+
+Complete the setup guides in the following order:
+
+1. **Supabase Setup**
+   - Import the database schema.
+   - Deploy the Edge Function.
+   - Configure Supabase secrets.
+
+2. **Automation Agent Setup**
+   - Configure `config.json`.
+   - Import the n8n workflow.
+   - Configure the AI provider.
+   - Run the scrapers to populate the database.
+
+Only after those steps are completed should you continue with the dashboard setup.
+
+---
+
+# Getting Started
 
 Install dependencies:
 
@@ -37,13 +62,13 @@ Install dependencies:
 npm install
 ```
 
-Create your local environment file:
+Create the environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Add your Supabase values:
+Configure the following values:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -68,17 +93,21 @@ Preview the production build:
 npm run preview
 ```
 
-## Supabase Requirements
+---
 
-The app expects a Supabase table or view named:
+# Database Requirements
 
-```text
+The dashboard expects the Supabase database created during the **Supabase Setup**.
+
+The primary view used by the dashboard is:
+
+```
 matched_opportunities
 ```
 
-Expected columns:
+Expected columns include:
 
-```text
+```
 reference_number
 title
 government_entity
@@ -94,45 +123,79 @@ recommended_action
 last_seen_at
 ```
 
-The browser must use a public-safe Supabase key. Do not use a service role key or secret key in `VITE_SUPABASE_ANON_KEY`.
+The dashboard will automatically display opportunities once the automation workflow has populated the database.
 
-Use one of:
+---
 
-- Supabase anon public key
-- Supabase publishable key
+# Authentication
 
-## Decision Behavior
+The frontend must use a public client key.
 
-By default, the dashboard focuses on useful opportunities:
+Never use:
 
-- `MATCHED`
-- `REVIEW`
+- Service Role Key
+- Secret Key
 
-Rejected opportunities are available only when selecting the rejected decision filter.
+Use either:
 
-## Environment Notes
+- Supabase Anon Key
+- Supabase Publishable Key
 
-Vite only reads `.env` files when the dev server starts. If you change `.env`, stop and restart the server:
+---
+
+# Decision Filtering
+
+By default the dashboard focuses on actionable opportunities.
+
+Visible by default:
+
+- MATCHED
+- REVIEW
+
+Rejected opportunities are available by selecting the **Rejected** filter.
+
+---
+
+# Environment Notes
+
+Vite only loads environment variables when the development server starts.
+
+If you modify `.env`, restart the server:
 
 ```bash
 npm run dev
 ```
 
-## Security
+---
 
-This project is frontend-only. Keep these rules:
+# Security
+
+This is a frontend-only application.
+
+Recommended practices:
 
 - Never commit `.env`
-- Never expose a Supabase service role key in the browser
-- Configure Supabase Row Level Security or safe views before public deployment
+- Never expose a Service Role Key
+- Enable Row Level Security where appropriate
+- Use views rather than exposing raw tables to the frontend
 
-## Deployment
+---
 
-This is a static Vite app. It can be deployed to platforms like Vercel, Netlify, Cloudflare Pages, or any static hosting provider.
+# Deployment
 
-Set these environment variables in your hosting platform:
+The dashboard is a static Vite application and can be deployed to any static hosting provider, including:
+
+- Vercel
+- Netlify
+- Cloudflare Pages
+- GitHub Pages
+- Any static web server
+
+Configure the following environment variables in your hosting platform:
 
 ```env
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
+
+Once deployed, the dashboard will automatically display opportunities generated by the automation agent.

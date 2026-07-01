@@ -1,0 +1,30 @@
+{
+  "SUPABASE_URL": "https://your-project.supabase.co",
+  "SUPABASE_SERVICE_ROLE_KEY": "YOUR_SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_SECRET_KEY": "YOUR_SUPABASE_SECRET_KEY",
+  "SUPABASE_FUNCTION_URL": "https://your-project.supabase.co/functions/v1/unfiltered_send",
+
+  "AI_API_URL": "https://your-ai-provider/compatible-mode/v1/chat/completions",
+  "AI_API_KEY": "YOUR_AI_API_KEY",
+  "AI_MODEL": "deepseek-v3.2",
+
+  "SSH_HOST": "YOUR_SSH_HOST",
+  "SSH_PORT": 22,
+  "SSH_USERNAME": "YOUR_USERNAME",
+  "SSH_PASSWORD": "YOUR_PASSWORD",
+
+  "SCRAPER_PROJECT_PATH": "/opt/etimad_scraper",
+  "SCRAPER_PYTHON_PATH": "/opt/etimad_scraper/venv/bin/python",
+
+  "ETIMAD_SCRAPER_SCRIPT": "scrabsbc.py",
+  "FORSAH_SCRAPER_SCRIPT": "forsah.py",
+
+  "FORSAH_API_URL": "https://forsah-api.910ths.sa/api/v1/opportunities",
+
+  "WORKER_COUNT": 24,
+
+  "UNASSESSED_OPPORTUNITIES_VIEW": "unassessed_opportunities",
+  "AI_OPPORTUNITY_ASSESSMENTS_TABLE": "ai_opportunity_assessments",
+  "ETIMAD_OPPORTUNITIES_TABLE": "etimad_opportunities",
+  "FORSAH_OPPORTUNITIES_TABLE": "forsah_opportunities"
+}

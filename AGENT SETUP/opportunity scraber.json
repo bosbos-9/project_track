@@ -1,0 +1,355 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        48
+      ],
+      "id": "536f74d2-e4b4-4478-91cc-270bfa0feac5",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const qwenItems = $input.all();\nconst sourceItems = $('Fetch info from DB').all();\n\nfunction extractJson(content) {\n  if (!content) {\n    throw new Error(\"Qwen content is empty\");\n  }\n\n  // Remove markdown json block if Qwen returns ```json ... ```\n  content = content\n    .replace(/```json/gi, \"\")\n    .replace(/```/g, \"\")\n    .trim();\n\n  const match = content.match(/\\{[\\s\\S]*\\}/);\n\n  if (!match) {\n    throw new Error(\"No JSON object found in Qwen response: \" + content);\n  }\n\n  return JSON.parse(match[0]);\n}\n\nfunction normalizeScore(value) {\n  if (value === null || value === undefined) return 0;\n\n  let num = Number(value);\n\n  if (Number.isNaN(num)) return 0;\n\n  // Qwen sometimes returns 0.95 instead of 95\n  if (num > 0 && num <= 1) {\n    num = num * 100;\n  }\n\n  return Math.round(num);\n}\n\nreturn qwenItems.map((item, index) => {\n  const source = sourceItems[index].json;\n  const content = item.json.choices?.[0]?.message?.content;\n\n  const parsed = extractJson(content);\n\n  return {\n  json: {\n    reference_number: source.reference_number,\n    source: source.source,\n\n    decision: parsed.decision || \"REVIEW\",\n    fit_score: normalizeScore(parsed.fit_score),\n    confidence: normalizeScore(parsed.confidence),\n\n    best_service_area: parsed.best_service_area || null,\n    matched_service_areas: parsed.matched_service_areas || [],\n\n    reason_ar: parsed.reason_ar || null,\n    recommended_action: parsed.recommended_action || null,\n\n    model: item.json.model || \"qwen3.6-flash\",\n    raw_ai_response: parsed\n  }\n};\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        -144
+      ],
+      "id": "7e7f3603-1efe-4d06-a0bd-93bf386aec7f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{\n$('Load Config').item.json.data.SUPABASE_URL +\n'/rest/v1/' +\n$('Load Config').item.json.data.AI_OPPORTUNITY_ASSESSMENTS_TABLE\n}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Load Config').item.json.data.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Load Config').item.json.data.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"reference_number\": \"{{$json.reference_number}}\",\n  \"source\": \"{{$json.source}}\",\n  \"decision\": \"{{$json.decision}}\",\n  \"fit_score\": {{$json.fit_score}},\n  \"confidence\": {{$json.confidence}},\n  \"best_service_area\": {{$json.best_service_area === null ? \"null\" : JSON.stringify($json.best_service_area)}},\n  \"matched_service_areas\": {{$json.matched_service_areas ? JSON.stringify($json.matched_service_areas) : \"[]\"}},\n  \"reason_ar\": {{$json.reason_ar === null ? \"null\" : JSON.stringify($json.reason_ar)}},\n  \"recommended_action\": {{$json.recommended_action === null ? \"null\" : JSON.stringify($json.recommended_action)}},\n  \"model\": \"{{$json.model}}\",\n  \"raw_ai_response\": {{$json.raw_ai_response ? JSON.stringify($json.raw_ai_response) : \"{}\"}}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1184,
+        192
+      ],
+      "id": "f9b04c71-8f05-4ff3-be89-410e2509f58e",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{\n$('Load Config').item.json.data.SUPABASE_URL +\n'/rest/v1/' +\n(\n  $json.source === 'etimad'\n    ? $('Load Config').item.json.data.ETIMAD_OPPORTUNITIES_TABLE +\n      '?reference_number=eq.' + $json.reference_number\n    : $('Load Config').item.json.data.FORSAH_OPPORTUNITIES_TABLE +\n      '?id=eq.' + $json.reference_number\n)\n}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Load Config').item.json.data.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Load Config').item.json.data.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"is_assessed\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1408,
+        -16
+      ],
+      "id": "c8424c97-4fef-4860-8863-5aebe9820cc8",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "command": "=={{\n[\n'cd \"' + $('Load Config').item.json.data.SCRAPER_PROJECT_PATH + '\"',\n'SUPABASE_SECRET_KEY=\"' + $('Load Config').item.json.data.SUPABASE_SECRET_KEY + '\"',\n'SUPABASE_FUNCTION_URL=\"' + $('Load Config').item.json.data.SUPABASE_FUNCTION_URL + '\"',\n'\"' + $('Load Config').item.json.data.SCRAPER_PYTHON_PATH + '\" \"' + $('Load Config').item.json.data.SCRAPER_PROJECT_PATH + '/' + $('Load Config').item.json.data.ETIMAD_SCRAPER_SCRIPT + '\"'\n].join('\\n')\n}}"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -160
+      ],
+      "id": "086a476c-4d00-4d1b-8f38-5f6ca35486d0",
+      "name": "Scrab etimad and upload to supabase",
+      "credentials": {
+        "sshPassword": {
+          "id": "TP6da9jFku5RyyXw",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{\n$('Load Config').item.json.data.SUPABASE_URL +\n\"/rest/v1/\" +\n$('Load Config').item.json.data.UNASSESSED_OPPORTUNITIES_VIEW +\n\"?select=*&order=last_seen_at.desc&limit=500\"\n}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Load Config').item.json.data.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ $('Load Config').item.json.data.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        -144
+      ],
+      "id": "61104935-652b-43b6-b389-82c9fac17843",
+      "name": "Fetch info from DB"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Load Config').item.json.data.AI_API_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Load Config').item.json.data.AI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    model: \"deepseek-v3.2\",\n    messages: [\n      {\n        role: \"system\",\n        content: \"You are a strict JSON classifier. Return JSON only.\"\n      },\n      {\n        role: \"user\",\n        content:\n`أنت محلل فرص حكومية في منصة اعتماد.\n\nقيّم هل هذه المنافسة مناسبة لمعهد/شركة تقدم فقط هذه المجالات:\n1. التدريب والتطوير\n2. الفعاليات والمؤتمرات\n3. الترجمة واللغات\n4. الخدمات الاستشارية\n5. التحول والمحتوى الرقمي\n\nقواعد:\n- إذا كانت توريد معدات، قطع غيار، تكييف، كهرباء، سباكة، مقاولات، صيانة مباني، نظافة، حراسات، وقود، أثاث، مستلزمات طبية، أو أعمال إنشائية => REJECTED.\n- إذا كانت تدريب، فعاليات، ترجمة، استشارات، تحول رقمي، دعم فني، تطوير أنظمة أو منصات => MATCHED.\n- إذا كانت قريبة ولكن غير واضحة => REVIEW.\n- أرجع JSON فقط.\n4\n\nبيانات المنافسة:\nالرقم المرجعي: ${$json.reference_number}\nالعنوان: ${$json.title}\nاسم المنافسة: ${$json.competition_name}\nالغرض: ${$json.purpose || \"\"}\nالجهة الحكومية: ${$json.government_entity || \"\"}\nالنشاط الأساسي: ${$json.main_activity || \"\"}\nنوع المنافسة: ${$json.competition_type || \"\"}\nمدة العقد: ${$json.contract_duration || \"\"}\nطريقة تقديم العروض: ${$json.submission_method || \"\"}\nنص التفاصيل: ${$json.ai_context || \"\"}\n\nأرجع JSON فقط بهذا الشكل:\n{\n  \"decision\": \"MATCHED أو REVIEW أو REJECTED\",\n  \"fit_score\": 0,\n  \"confidence\": 0,\n  \"best_service_area\": null,\n  \"matched_service_areas\": [],\n  \"reason_ar\": \"\",\n  \"recommended_action\": \"\"\n}`\n      }\n    ],\n    temperature: 0,\n    extra_body: {\n      enable_thinking: false\n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        848,
+        208
+      ],
+      "id": "7fe02a56-df50-4549-9282-d3ec2d76d2f4",
+      "name": "AI"
+    },
+    {
+      "parameters": {
+        "command": "=={{\n`/bin/zsh -c 'export SUPABASE_URL=\"${$('Load Config').item.json.data.SUPABASE_URL}\";\nexport SUPABASE_SERVICE_ROLE_KEY=\"${$('Load Config').item.json.data.SUPABASE_SERVICE_ROLE_KEY}\";\n\"${$('Load Config').item.json.data.SCRAPER_PYTHON_PATH}\" \"${$('Load Config').item.json.data.SCRAPER_PROJECT_PATH}/${$('Load Config').item.json.data.FORSAH_SCRAPER_SCRIPT}\"'`\n}}"
+      },
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        416,
+        176
+      ],
+      "id": "d1f33bb9-380e-44ad-ab38-1f3658f68303",
+      "name": "Scrab FORSAH and upload to supabase1",
+      "credentials": {
+        "sshPassword": {
+          "id": "TP6da9jFku5RyyXw",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "/Users/bosbos9/.n8n-files/config.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -176
+      ],
+      "id": "b022e046-1c2c-4304-9d09-88170c486d64",
+      "name": "Load Config FILE"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        112
+      ],
+      "id": "3227888a-3e3a-4ecd-92bc-474bb92d41e7",
+      "name": "Load Config"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load Config FILE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrab etimad and upload to supabase": {
+      "main": [
+        [
+          {
+            "node": "Scrab FORSAH and upload to supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch info from DB": {
+      "main": [
+        [
+          {
+            "node": "AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrab FORSAH and upload to supabase1": {
+      "main": [
+        [
+          {
+            "node": "Fetch info from DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Config FILE": {
+      "main": [
+        [
+          {
+            "node": "Load Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Config": {
+      "main": [
+        [
+          {
+            "node": "Scrab etimad and upload to supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3477415b-8fdd-4c54-921b-343f036c1fb9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f2fd9e5ad0a1fd0cffddd030221cb23ae574b725fc09840ae56dcf703178d475"
+  },
+  "nodeGroups": [],
+  "id": "4tGtmF17LJPOu9E3",
+  "tags": []
+}

@@ -36,7 +36,8 @@ const formatDate = (date: string | null) => {
   return new Intl.DateTimeFormat("ar-SA-u-nu-latn", { year: "numeric", month: "short", day: "2-digit" }).format(parsed);
 };
 
-const formatNumber = (value: number | null) => (typeof value === "number" ? value.toFixed(0) : "-");
+const formatNumber = (value: number | null) => (typeof value === "number" ? value.toFixed(0) : "غير محدد");
+const missingText = "غير متوفر";
 
 export function OpportunitiesTable({ opportunities, onSelect }: OpportunitiesTableProps) {
   if (opportunities.length === 0) {
@@ -53,15 +54,15 @@ export function OpportunitiesTable({ opportunities, onSelect }: OpportunitiesTab
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-200/40 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 dark:shadow-none">
       <div className="overflow-x-auto">
-        <table className="min-w-[940px] w-full border-collapse text-right text-sm">
+        <table className="min-w-[900px] w-full table-fixed border-collapse text-right text-sm">
           <thead className="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-normal text-slate-500 dark:bg-slate-950/50 dark:text-slate-400">
             <tr>
-              <th className="px-5 py-3">الفرصة</th>
-              <th className="px-5 py-3">الجهة</th>
-              <th className="px-5 py-3">النشاط الرئيسي</th>
-              <th className="px-5 py-3">مجال الخدمة</th>
-              <th className="px-5 py-3">القرار</th>
-              <th className="px-5 py-3 text-left">الرابط</th>
+              <th className="w-[30%] px-5 py-3">الفرصة</th>
+              <th className="w-[18%] px-5 py-3">الجهة</th>
+              <th className="w-[20%] px-5 py-3">النشاط الرئيسي</th>
+              <th className="w-[16%] px-5 py-3">مجال الخدمة</th>
+              <th className="w-[9%] px-5 py-3">القرار</th>
+              <th className="w-[7%] px-5 py-3 text-left">الرابط</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -80,13 +81,13 @@ export function OpportunitiesTable({ opportunities, onSelect }: OpportunitiesTab
                   </div>
                 </td>
                 <td className="max-w-[240px] px-5 py-4 align-top text-slate-700 dark:text-slate-300" dir="auto">
-                  {opportunity.government_entity || "-"}
+                  {opportunity.government_entity || missingText}
                 </td>
                 <td className="max-w-[240px] px-5 py-4 align-top text-slate-700 dark:text-slate-300" dir="auto">
-                  {opportunity.main_activity || "-"}
+                  {opportunity.main_activity || missingText}
                 </td>
                 <td className="px-5 py-4 align-top text-slate-700 dark:text-slate-300" dir="auto">
-                  {opportunity.best_service_area || "-"}
+                  {opportunity.best_service_area || missingText}
                 </td>
                 <td className="px-5 py-4 align-top">
                   <DecisionBadge decision={opportunity.decision} />
